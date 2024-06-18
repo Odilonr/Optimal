@@ -1,1 +1,1 @@
-App to keep of peronal gym goals
+This an application that will track my gym daily data and progress

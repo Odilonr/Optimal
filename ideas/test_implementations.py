@@ -3,7 +3,7 @@ import tkinter.font as tkFont
 import tkinter.ttk as ttk
 
 class CircularProgressbar(object):
-    def __init__(self, canvas, x0, y0, x1, y1, width=2, start_ang=90, full_extent=360):
+    def __init__(self, canvas, x0, y0, x1, y1, width=2, start_ang=90, full_extent=90):
         self.custom_font = tkFont.Font(family="Helvetica", size=12, weight='bold')
         self.canvas = canvas
         self.x0, self.y0, self.x1, self.y1 = x0+width, y0+width, x1-width, y1-width
