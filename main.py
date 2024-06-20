@@ -64,6 +64,7 @@ class App(ctk.CTk):
          password = self.signin_frame.password.get()
          if user_name == dummy_data['username'] and password == dummy_data['password']:
               self.signin_frame.grid_forget()
+              self.signup_frame.grid_forget()
               self.homepage.tkraise()
               self.homepage.grid(row = 3, columns = 2, sticky = "nsew")
               
@@ -75,6 +76,7 @@ class App(ctk.CTk):
 
     def log_out(self):
          self.homepage.grid_forget()
+         self.signup_frame.grid_forget()
          self.signin_frame.tkraise()
          self.signin_frame.grid(row = 0, columns = 2, padx=52, pady=60)
 
