@@ -11,14 +11,14 @@ class App(ctk.CTk):
 		# window setup 
 		super().__init__(fg_color = GREEN)
 		self.title('')
-		self.iconbitmap('empty.ico')
+		##self.iconbitmap('empty.ico')
 		self.geometry('400x400')
 		self.resizable(False, False)
 		self.change_title_bar_color()
 
 		# layout 
 		self.columnconfigure(0, weight = 1)
-		self.rowconfigure((0,1,2,3), weight = 1, uniform = 'a')
+		self.rowconfigure((0,1,2,3), weight = 1,uniform='a')
 
 		# data 
 		self.metric_bool = ctk.BooleanVar(value = True)
