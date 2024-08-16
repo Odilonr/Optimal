@@ -1,29 +1,22 @@
 import customtkinter as ctk
 from CTkMessagebox  import CTkMessagebox
-from tkinter import BOTH
 try:
 	from ctypes import windll, byref, sizeof, c_int
 except:
 	pass
-from themes import BLUE_GRAY,TITLE_BAR_COLOR,BLUE_GRAY_TEST
-from application_view.authentitication import Signin, Signup
-from application_view.top_level import TopLevelWindow
+from src.ui.authentitication import Signin, Signup
+from src.ui.toplevelwindow import TopLevelWindow
+from src.data.database_manager import Databasemanager
+from src.utils.session_manager import session_manager
+from src.utils.constant import BLUE_GRAY, TITLE_BAR_COLOR, BLUE_GRAY_TEST
 
 
-dummy_data = {
-      'username':'odilon',
-      'password':'1234',
-      'age': 23,
-      'weight': 210,
-      'height':75,
-      'calories':1600,
-      'steps':9500,
-      'sleep':8
-}
 
 class App(ctk.CTk):
-    def __init__(self):
-          super().__init__(fg_color=BLUE_GRAY_TEST)
+     current_user = None
+
+     def __init__(self):
+          super().__init__(fg_color=BLUE_GRAY)
           self.title('')
           try:
                self.iconbitmap('the_icon.ico')
@@ -35,40 +28,39 @@ class App(ctk.CTk):
 
           self.signin_frame = Signin(master=self)
           self.signup_frame = Signup(master=self)
-          ##self.signin_frame.show()
+          self.signin_frame.show()
+          self.signin_frame.signin_button.configure(command=self.signin_approval)
           
-
-          #configurations
-          ##self.signin_frame.signin_button.configure(command=self.signin_approval)  
-           
+          #configurations           
           self.toplevel_window = None
 
-          self.open_toplevel()
-
-
-    def signin_approval(self):
-         user_name = self.signin_frame.user_name.get().lower()
-         password = self.signin_frame.password.get()
-         if user_name == dummy_data['username'] and password == dummy_data['password']:
-               self.open_toplevel()
-         elif user_name == '' or password == '':
-              CTkMessagebox(self, title='Error', fg_color=BLUE_GRAY, bg_color='#030426',
-                            message='You need to enter both both the username and password',icon ='cancel')
-              
-         elif user_name != dummy_data['username'] or user_name != dummy_data['password']:
-              CTkMessagebox(self, title='Error', fg_color=BLUE_GRAY, bg_color='#030426',
-                            message='Wrong Username or Password, try again',icon ='cancel')
-              
     
-    def open_toplevel(self):
+     def open_toplevel(self):
          if self.toplevel_window is None or not self.toplevel_window.winfo_exists():
               self.toplevel_window = TopLevelWindow(master=self)
               self.grab_set()
               self.withdraw()
          else:
               self.toplevel_window.focus()
+
+     def signin_approval(self):
+        user_name = self.signin_frame.user_name.get().lower()
+        password = self.signin_frame.password.get()
+        database = Databasemanager()
+
+        gymbro = database.get_athlete(username=user_name, password=password)
+
+        if gymbro:
+           session_manager.login(gymbro)
+           self.open_toplevel()
+        elif user_name == '' or password == '':
+            CTkMessagebox(self, title='Error', fg_color=BLUE_GRAY, bg_color='red',
+                      message='You need to enter both the username and password', icon='cancel', button_color=BLUE_GRAY_TEST)
+        else:
+            CTkMessagebox(self, title='Error', fg_color=BLUE_GRAY, bg_color='red',
+                        message='Wrong Username or Password, try again', icon='cancel')
         
-    def change_title_bar_color(self):
+     def change_title_bar_color(self):
       try:
             HWND = windll.user32.GetParent(self.winfo_id())
             DWMWA_ATTRIBUTE = 35
