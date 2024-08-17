@@ -6,7 +6,7 @@ except:
 	pass
 from src.ui.authentitication import Signin, Signup
 from src.ui.toplevelwindow import TopLevelWindow
-from src.data.database_manager import Databasemanager
+from src.data.database_manager import database
 from src.utils.session_manager import session_manager
 from src.utils.constant import BLUE_GRAY, TITLE_BAR_COLOR, BLUE_GRAY_TEST
 
@@ -46,7 +46,8 @@ class App(ctk.CTk):
      def signin_approval(self):
         user_name = self.signin_frame.user_name.get().lower()
         password = self.signin_frame.password.get()
-        database = Databasemanager()
+        
+        database.open(db_name='health_tracker.db')
 
         gymbro = database.get_athlete(username=user_name, password=password)
 
@@ -54,11 +55,11 @@ class App(ctk.CTk):
            session_manager.login(gymbro)
            self.open_toplevel()
         elif user_name == '' or password == '':
-            CTkMessagebox(self, title='Error', fg_color=BLUE_GRAY, bg_color='red',
-                      message='You need to enter both the username and password', icon='cancel', button_color=BLUE_GRAY_TEST)
+            CTkMessagebox(self, title='Error',
+                            message='Please fill both',icon ='cancel',text_color='white')
         else:
-            CTkMessagebox(self, title='Error', fg_color=BLUE_GRAY, bg_color='red',
-                        message='Wrong Username or Password, try again', icon='cancel')
+            CTkMessagebox(self, title='Error',
+                            message='Wrong credentials',icon ='cancel',text_color='white')
         
      def change_title_bar_color(self):
       try:

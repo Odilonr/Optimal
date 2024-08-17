@@ -41,8 +41,16 @@ class TopLevelWindow(ctk.CTkToplevel):
 
         self.change_title_bar_color()
 
+    def refresh_all_frames(self):
+         for frame in self.frames.values():
+              if hasattr(frame, 'refresh_user'):
+                   frame.refresh_user()
+
     def switch(self, frame):
+        self.refresh_all_frames()
         self.frames[frame].tkraise()
+
+
 
 
     def change_title_bar_color(self):
@@ -110,6 +118,7 @@ class Menu(ctk.CTkFrame):
         self.master.master.deiconify()
 
     def home(self):
+        self.master.home.refresh_user()
         self.master.switch(Home)
 
     def log(self):

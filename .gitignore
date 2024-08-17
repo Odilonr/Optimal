@@ -1,4 +1,4 @@
-/ideas/*
 /__pycache__/*
-/ideas/other_trial
-/ideas/other.py 
+/health_tracker.db 
+/env/*
+/test_scripts.py

@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from PIL import Image
 from tkinter import IntVar, StringVar
-from ..data.database_manager import Databasemanager
+from ..data.database_manager import database
 from ..models.gymGoer import Gymbro
 from ..utils.constant import BLUE_GRAY
 from CTkMessagebox  import CTkMessagebox
@@ -65,8 +65,6 @@ class Signin(ctk.CTkFrame):
     def hide(self):
         self.grid_forget()
 
-             
-
     def signup(self):
         self.hide()
         self.master.signup_frame.tkraise()
@@ -109,10 +107,15 @@ class Signup(ctk.CTkFrame):
                                           dropdown_text_color='black', button_hover_color='#e6f0ef')
         self.activity_entry.place(x = 220, y = 190)
 
-        self.height_entry = ctk.CTkOptionMenu(self, width=90, height=50,button_color='white', fg_color='white', 
-                                          dropdown_fg_color='white', values=['1','2','3'], text_color='black', 
-                                          dropdown_text_color='black', button_hover_color='#e6f0ef')
-        self.height_entry.place(x = 410, y = 190)
+        self.height_entry_feet = ctk.CTkEntry(self, width=90, height=50, fg_color='white', border_width=2,
+                                         text_color='black', font=font_name, placeholder_text= 'feet',
+                                         placeholder_text_color='#050000',corner_radius=0)
+        self.height_entry_feet.place(x = 410, y = 190)
+
+        self.height_entry_inches = ctk.CTkEntry(self, width=90, height=50, fg_color='white', border_width=2,
+                                         text_color='black', font=font_name, placeholder_text= 'inch',
+                                         placeholder_text_color='#050000',corner_radius=0)
+        self.height_entry_inches.place(x = 510, y = 190)
 
         self.phase_entry = ctk.CTkOptionMenu(self, width=180, height=50,button_color='white', fg_color='white', 
                                           dropdown_fg_color='white', values=['Cut', 'Bulk'], text_color='black', 
@@ -140,10 +143,23 @@ class Signup(ctk.CTkFrame):
         self.signup_button = ctk.CTkButton(self, text='Create profile',width=240, height=50,border_width=1, border_color='white',fg_color=BLUE_GRAY,
                                             text_color='white',hover_color='#0c1545', font=font_signin_size, corner_radius=0,
                                             command=self.signup)
-        self.signup_button.place(x = 290, y = 340)
+        self.signup_button.place(x = 290, y = 320)
+
+        self.create_message = ctk.CTkLabel(self, text="Got an account?", fg_color='transparent', text_color='white',
+                                           font=('Microsoft Yahei UI Light', 15))
+        self.create_message.place(x=300,y=375)
+
+        self.signup_button = ctk.CTkButton(self, width=6, text='Sign in', border_width=0, text_color='white', fg_color=BLUE_GRAY,
+                                           hover_color=BLUE_GRAY,font=('Microsoft Yahei UI Light', 13,'bold'), cursor='hand2',
+                                           command=self.back_to_sign_in)
+        self.signup_button.place(x=430,y=375)  
 
     def radiobutton_event(self):
         print("radiobutton toggled, current value:", self.gender_var.get())
+
+    def height_transformation(self,feet, inches):
+        total_inches = (feet * 12 ) + inches
+        return total_inches
 
     def show(self):
         self.grid(row = 0, columns = 2, padx=52, pady=60)
@@ -152,33 +168,37 @@ class Signup(ctk.CTkFrame):
         self.grid_forget()
 
     def signup(self):
-        username = self.username_entry.get()
+        username = self.username_entry.get().lower()
         password = self.password_entry.get()
-        age = self.age_entry.get()
-        height = self.height_entry.get()
-        weight = self.weight_entry.get()
+        age = int(self.age_entry.get())
+        feet = int(self.height_entry_feet.get())
+        inches = int(self.height_entry_inches.get())
+        height = self.height_transformation(feet,inches)
+        weight = int(self.weight_entry.get())
         gender = self.gender_var.get()
         activity = self.activity_entry.get()
         phase= self.phase_entry.get()
-        database = Databasemanager()
 
         athlete = database.get_athlete(username=username,password=password)
 
         if athlete:
-            CTkMessagebox(self, title='Error', fg_color=BLUE_GRAY, bg_color='red',
+            CTkMessagebox(self, title='Error',
                             message='User already exists',icon ='cancel',text_color='white')
             
         elif (username == '' or password == '' or age == '' or height == '' or weight == '' or gender == ''):
-            CTkMessagebox(self, title='Error', fg_color=BLUE_GRAY, bg_color='red',
-                            message='Please complete all categories',icon ='cancel',text_color='white')
+            CTkMessagebox(self, title='Error',
+                            message='Please fill all fields',icon ='cancel',text_color='white')
             
         else:
             database.add_athlete(username=username, password=password, age=age, height=height, 
-                                 weight=weight, activity=activity, phase=phase, gender=gender)
+                                 weight=weight,gender=gender, activity=activity, phase=phase)
             
-            self.grid_forget()
-            self.master.signin_frame.tkraise()
-            self.master.signin_frame.show()
+            self.back_to_sign_in()
 
         database.close()
+
+    def back_to_sign_in(self):
+        self.grid_forget()
+        self.master.signin_frame.tkraise()
+        self.master.signin_frame.show()
          

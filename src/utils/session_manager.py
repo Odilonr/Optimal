@@ -14,5 +14,8 @@ class SessionManager:
     def is_logged_in(self):
         return self.current_user is not None
     
+    def update_current_user(self, new_user):
+        self.current_user = new_user
+    
 
 session_manager = SessionManager()
