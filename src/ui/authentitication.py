@@ -1,8 +1,7 @@
 import customtkinter as ctk
 from PIL import Image
-from tkinter import IntVar, StringVar
+from tkinter import StringVar
 from ..data.database_manager import database
-from ..models.gymGoer import Gymbro
 from ..utils.constant import BLUE_GRAY
 from CTkMessagebox  import CTkMessagebox
 
@@ -131,12 +130,12 @@ class Signup(ctk.CTkFrame):
 
         #Male
         self.male_button = ctk.CTkRadioButton(self, text='Male', value='M',variable=self.gender_var,font=('Microsoft Yahei UI',15),
-                                              text_color='white', command=self.radiobutton_event)
+                                              text_color='white')
         self.male_button.place(x = 480, y=270)
 
         #Female
         self.female_button = ctk.CTkRadioButton(self, text='Female', value='F', variable=self.gender_var,font=('Microsoft Yahei UI',15),
-                                                text_color='white',command=self.radiobutton_event)
+                                                text_color='white')
         self.female_button.place(x=565, y=270)
 
 
@@ -154,8 +153,6 @@ class Signup(ctk.CTkFrame):
                                            command=self.back_to_sign_in)
         self.signup_button.place(x=430,y=375)  
 
-    def radiobutton_event(self):
-        print("radiobutton toggled, current value:", self.gender_var.get())
 
     def height_transformation(self,feet, inches):
         total_inches = (feet * 12 ) + inches
@@ -192,6 +189,10 @@ class Signup(ctk.CTkFrame):
         else:
             database.add_athlete(username=username, password=password, age=age, height=height, 
                                  weight=weight,gender=gender, activity=activity, phase=phase)
+            
+            athlete_id = database.get_athlete_id(username=username)
+
+            database.empty_daily_record(athlete_id)
             
             self.back_to_sign_in()
 

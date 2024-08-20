@@ -8,6 +8,7 @@ except:
 from .Homepage import Home
 from .FoodLog import Log
 from .ProfilePage import Profile
+from ..utils.session_manager import session_manager
 
 
 class TopLevelWindow(ctk.CTkToplevel):
@@ -114,6 +115,7 @@ class Menu(ctk.CTkFrame):
         self.logout_button.grid(row =9, column = 0,  sticky = 'nswe')
 
     def logout(self):
+        session_manager.logout()
         self.master.destroy()
         self.master.master.deiconify()
 

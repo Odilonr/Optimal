@@ -36,17 +36,17 @@ class Profile(ctk.CTkFrame):
                                        corner_radius=0, text_color='black', textvariable=tkinter.StringVar(value=self.current_user.age),
                                        state='disabled')
         
-        new_height = self.height_transformation(self.current_user.height)
+        current_height = self.current_user.inches_to_ftinch(self.current_user.height)
         
         self.height_feet_entry = ctk.CTkEntry(self, width=50, height=50, fg_color='white', text_color='black', 
                                          border_width=2,font=self.font_fields,placeholder_text='feet',
                                          placeholder_text_color='#050000',state='disabled',
-                                         textvariable=tkinter.StringVar(value=new_height['feet']))
+                                         textvariable=tkinter.StringVar(value=current_height['feet']))
         
         self.height_inches_entry = ctk.CTkEntry(self, width=50, height=50, fg_color='white', text_color='black', 
                                          border_width=2,font=self.font_fields,placeholder_text='inches',
                                          placeholder_text_color='#050000',state='disabled',
-                                         textvariable=tkinter.StringVar(value=new_height['inches']))
+                                         textvariable=tkinter.StringVar(value=current_height['inches']))
         
 
         self.weight = ctk.CTkEntry(self, width=180,height=50, fg_color='white', border_width=2,
@@ -124,15 +124,14 @@ class Profile(ctk.CTkFrame):
         self.sleep_goal.grid(row=6, column = 3, padx=100, sticky='ne')
         self.edit.grid(row=8, column=0, padx=10, sticky='e')
 
-
     def edit_command(self):
         self.edit.grid_forget()
         self.save.grid(row=8, column=0, padx=10, sticky='e')
 
         attributes = [self.username, self.age, self.height_feet_entry,
                              self.height_inches_entry,self.weight, self.activity, self.phase,
-                             self.calorie_goal,self.calorie_goal,self.protein_goal,self.fat_goal,
-                             self.step_goal,self.sleep_goal]
+                             self.calorie_goal,self.calorie_goal,self.carb_goal,
+                             self.protein_goal,self.fat_goal,self.step_goal,self.sleep_goal]
 
         for attribute in attributes:
             attribute.configure(state='normal')
@@ -148,11 +147,11 @@ class Profile(ctk.CTkFrame):
                             message='Cannot leave empty spots',icon ='cancel',text_color='white')
                 return
             
-        username = self.username.get()
+        username = self.username.get().lower()
         age = int(self.age.get())
         feet = int(self.height_feet_entry.get())
         inches = int(self.height_inches_entry.get())
-        height = self.height_transformation_two(feet, inches)
+        height = self.current_user.ftinch_to_inches(feet, inches)
         weight = float(self.weight.get())
         activity = self.activity.get()
         phase = self.phase.get()
@@ -202,25 +201,6 @@ class Profile(ctk.CTkFrame):
         CTkMessagebox(self, title='Success',
                             message='Update succesfully',icon ='check',text_color='white')
         
-        
-
-
-            
-    def height_transformation(self, amount):
-        feet = amount//12
-        feet_remaining = (amount/12) - feet
-        inches = int(feet_remaining * 12)
-
-        return {
-                 'feet':feet,
-                 'inches':inches
-                }
-    
-    def height_transformation_two(self,feet, inches):
-        total_inches = (feet * 12 ) + inches
-        return total_inches
-    
-
 
     def entry_tiles(self, left_titles, right_titles):
         for i, entry_one in enumerate(left_titles):
@@ -230,10 +210,6 @@ class Profile(ctk.CTkFrame):
         for j , entry_two in enumerate(right_titles):
             title_two = ctk.CTkLabel(self,text = entry_two, font=self.font_title_small, text_color= "#F2F2F2")
             title_two.grid(row=j+1, column =3,padx=10,sticky='nw')
-
-
-
-
 
     
     def show(self):

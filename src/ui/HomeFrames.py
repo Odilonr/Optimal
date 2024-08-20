@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from ..utils.constant import BLUE_GRAY,BLUE_GRAY_TEST
+from ..utils.constant import BLUE_GRAY
 import tkinter as tk
 from ..utils.session_manager import session_manager
     
@@ -13,7 +13,6 @@ class DayNumbers(ctk.CTkFrame):
         self.rowconfigure(0, weight=1)
         self.create_widgets_canvas()
         self.create_macros_frame()
-
 
     def create_widgets_canvas(self):
         self.canvas = tk.Canvas(self, width=180, height=180, bg=BLUE_GRAY,highlightthickness=0)
@@ -62,8 +61,6 @@ class DayNumbers(ctk.CTkFrame):
         self.fat_goal.configure(textvariable = ctk.IntVar(value=self.current_user.fat_goal))
 
 
-   
-
 class CurrentWeightAHeight(ctk.CTkFrame):
     
     def __init__(self, master):
@@ -77,8 +74,10 @@ class CurrentWeightAHeight(ctk.CTkFrame):
         self.place_widgets()
 
     def create_widgets(self):
+        current_height = self.current_user.inches_to_ftinch(self.current_user.height)
+        formated_height = f"{current_height["feet"]}\'{current_height["inches"]}\'\'"
         self.age = ctk.CTkLabel(self, text=f'Age: {self.current_user.age}', font=('Microsoft Yahei UI Light', 20, 'bold'), text_color='white')
-        self.height = ctk.CTkLabel(self, text= f'Height: {self.current_user.height}', font=('Microsoft Yahei UI Light', 20, 'bold'), text_color='white')
+        self.height = ctk.CTkLabel(self, text= f'Height: {formated_height}', font=('Microsoft Yahei UI Light', 20, 'bold'), text_color='white')
         self.weight = ctk.CTkLabel(self, text= f'Weight: {self.current_user.weight}', font=('Microsoft Yahei UI Light', 20, 'bold'), text_color='white')
 
     def place_widgets(self):
@@ -88,8 +87,10 @@ class CurrentWeightAHeight(ctk.CTkFrame):
 
     def refresh_user(self):
         self.current_user = session_manager.get_current_user()
+        current_height = self.current_user.inches_to_ftinch(self.current_user.height)
+        formated_height = f"{current_height["feet"]}\'{current_height["inches"]}\'\'"
         self.age.configure(text=f'Age: {self.current_user.age}')
-        self.height.configure(text=f'Height: {self.current_user.height}')
+        self.height.configure(text=f'Height: {formated_height}')
         self.weight.configure(text=f'Weight: {self.current_user.weight}')
 
 

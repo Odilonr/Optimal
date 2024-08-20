@@ -8,9 +8,8 @@ class Databasemanager:
         self.open(db_name)
         self.create_tables()
 
-    
     def create_tables(self):
-        
+
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS athletes (
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 username TEXT UNIQUE,
@@ -85,7 +84,7 @@ class Databasemanager:
                     step_goal= 10000, sleep_goal = 8):
         activity_multiplier = self.determine_activity(activity=activity)
         maintenance = self.maintenace_calories(gender=gender, age=age, height=height, weight=weight, activity=activity_multiplier)
-            
+
         if phase == 'Cut':
             calorie_goal = maintenance - calorie_difference
         else:
@@ -104,14 +103,12 @@ class Databasemanager:
               phase, calorie_difference, step_goal, sleep_goal, carb_goal, protein_goal, fat_goal, calorie_goal))
         self.conn.commit()
 
-
     def get_athlete_id(self, username):
         self.cursor.execute("SELECT id FROM athletes WHERE username = ?", (username,))
         result = self.cursor.fetchone()
         if result:
             return result[0]
         return None
-    
     
     def get_athlete(self, username, password):
         self.cursor.execute("SELECT * FROM athletes WHERE username = ? AND password = ?", (username,password,))
@@ -169,18 +166,53 @@ class Databasemanager:
     
     def update_athlete(self, athlete_id, **kwargs):
         for feild in kwargs:
-            self.cursor.execute(f"""UPDATE athletes SET {feild} = ? WHERE id = ?""",(kwargs[feild], athlete_id))
+            self.cursor.execute(f"""UPDATE athletes SET {feild} = ? WHERE id = ?""",(kwargs[feild], athlete_id,))
 
         self.conn.commit()
 
-        
+    def get_athlete_data(self, athlete_id):
+        self.cursor.execute("SELECT weight, calorie_goal FROM athletes WHERE id = ?",(athlete_id,))
+        result = self.cursor.fetchone()
+        return result
 
+    def empty_daily_record(self, athlete_id):
+        current_date = date.today()
+        weight_and_remaining = self.get_athlete_data(athlete_id=athlete_id)
+        weight = weight_and_remaining[0]
+        calories_remaining = weight_and_remaining[1]
+        self.cursor.execute("""INSERT INTO daily_records (athlete_id, date, calories_consumed, calories_remaining,
+                            steps, carbs_consumed, protein_consumed, fat_consumed, weight, sleep)
+                                VALUES (?,?,?,?,?,?,?,?,?,?) """,(athlete_id,current_date.isoformat(),0,calories_remaining,0,0,0,0,
+                                               weight,0,))
+        self.conn.commit()
+
+    def update_daily_record(self, athlete_id, date, **kwargs):
+        for field in kwargs:
+            self.cursor.execute(f"""UPDATE daily_records SET {field} = ? WHERE athlete_id = ? AND 
+                                date = ?""",(kwargs[field],athlete_id,date,))
+            
+        self.conn.commit()
+
+    def get_current_food_record(self, athlete_id, date):
+        self.cursor.execute("""SELECT carbs_consumed,protein_consumed, fat_consumed,
+                             calories_consumed, calories_remaining 
+                            FROM daily_records WHERE athlete_id = ? AND date = ? """,
+                            (athlete_id, date,))
+        result = self.cursor.fetchone()
+        return result
+    
+    def get_current_step_sleep_record(self, athlete_id, date):
+        self.cursor.execute("""SELECT steps, sleep 
+                            FROM daily_records WHERE athlete_id = ? AND date = ? """,
+                            (athlete_id, date,))
+        result = self.cursor.fetchone()
+        return result
+    
     def close(self):
         self.conn.close()
 
     def open(self, db_name):
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
-
 
 database = Databasemanager()

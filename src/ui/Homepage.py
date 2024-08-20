@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from ..utils.constant import BLUE_GRAY_TEST,BLUE_GRAY
+from ..utils.constant import BLUE_GRAY
 from .HomeFrames import DayNumbers, CurrentWeightAHeight
 from ..utils.session_manager import session_manager
 
