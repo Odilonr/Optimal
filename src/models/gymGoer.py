@@ -34,8 +34,6 @@ class Gymbro:
         total_inches = (feet * 12 ) + inches
         return total_inches
     
-    def calculate_calories_remaining(self):
-        pass
     
     def update_main(self, **new_attributes):
         if self.id:
@@ -43,6 +41,13 @@ class Gymbro:
             for new_attribute in new_attributes:
                 self.new_attribute = new_attributes[new_attribute]
 
+    def get_current_athlete_data(self):
+        current = self.db_manager.get_athlete_data(self.id)
+        return current
+    
+    def update_remaining_cals(self):
+        calories_consumed = self.db_manager.ge
+    
     def update_food_record(self,carbs,protein,fat,date):
         current_food_stats = self.db_manager.get_current_food_record(self.id,date)
         new_carb = current_food_stats[0] + carbs
@@ -60,6 +65,25 @@ class Gymbro:
         new_steps = steps + current_steps_sleep[0]
         new_sleep = sleep + current_steps_sleep[1]
         self.db_manager.update_daily_record(self.id, date, steps = new_steps, sleep = new_sleep)
+
+
+    def athletes_daily_record(self,date):
+        food_consumed = self.db_manager.get_current_food_record(self.id, date)
+        steps_and_sleep = self.db_manager.get_current_step_sleep_record(self.id,date)
+        
+        if food_consumed and steps_and_sleep:
+            return {
+                    'carbs': food_consumed[0],
+                    'protein':food_consumed[1],
+                    'fat':food_consumed[2],
+                    'calories':food_consumed[3],
+                    'remaining':food_consumed[4],
+                    'steps':steps_and_sleep[0],
+                    'sleep':steps_and_sleep[1]
+                    }
+        return None
+    
+
 
 
     

@@ -46,6 +46,24 @@ class Databasemanager:
                                 )
                                 """
                             )
+        
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS food (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                athlete_id INTEGER,
+                                date DATE,
+                                meal_type TEXT,
+                                food_name TEXT,
+                                amount TEXT,
+                                carbs FLOAT,
+                                protein FLOAT, 
+                                fat FLOAT,
+                                UNIQUE(athlete_id, date, meal_type,  food_name),
+                                FOREIGN KEY (athlete_id) REFERENCES athletes (id)
+                                )
+                                """
+                            )
+
+
         self.conn.commit()
 
     def determine_activity(self, activity):
@@ -171,18 +189,21 @@ class Databasemanager:
         self.conn.commit()
 
     def get_athlete_data(self, athlete_id):
-        self.cursor.execute("SELECT weight, calorie_goal FROM athletes WHERE id = ?",(athlete_id,))
+        self.cursor.execute("SELECT * FROM athletes WHERE id = ?",(athlete_id,))
         result = self.cursor.fetchone()
         return result
 
-    def empty_daily_record(self, athlete_id):
-        current_date = date.today()
+    def get_all_athlete_ids(self):
+        self.cursor.execute("SELECT id from athletes")
+        return [row[0] for row in self.cursor.fetchall()]
+
+    def empty_daily_record(self, athlete_id, date):
         weight_and_remaining = self.get_athlete_data(athlete_id=athlete_id)
-        weight = weight_and_remaining[0]
-        calories_remaining = weight_and_remaining[1]
+        weight = weight_and_remaining[5]
+        calories_remaining = weight_and_remaining[15]
         self.cursor.execute("""INSERT INTO daily_records (athlete_id, date, calories_consumed, calories_remaining,
                             steps, carbs_consumed, protein_consumed, fat_consumed, weight, sleep)
-                                VALUES (?,?,?,?,?,?,?,?,?,?) """,(athlete_id,current_date.isoformat(),0,calories_remaining,0,0,0,0,
+                                VALUES (?,?,?,?,?,?,?,?,?,?) """,(athlete_id,date,0,calories_remaining,0,0,0,0,
                                                weight,0,))
         self.conn.commit()
 
@@ -208,6 +229,28 @@ class Databasemanager:
         result = self.cursor.fetchone()
         return result
     
+    def daily_record_exists(self, athlete_id, date):
+        self.cursor.execute("""
+                    SELECT EXISTS(SELECT 1 FROM daily_records WHERE athlete_id = ? AND date = ?)
+                            """, (athlete_id, date))
+        return self.cursor.fetchone()[0] == 1
+
+    def add_food(self, athlete_id, date, meal_type, food_name, amount, carbs, protein, fat):
+        
+        self.cursor.execute(""" INSERT OR IGNORE INTO food (athlete_id, date, meal_type, food_name, amount, carbs, protein,fat)
+                                VALUES (?,?,?,?,?,?,?,?)
+                            """, (athlete_id, date, meal_type, food_name, amount, carbs, protein, fat,))
+        
+        self.conn.commit()
+
+    def grab_food(self, athlete_id, date, meal_type):
+        self.cursor.execute("""SELECT food_name, amount
+                            FROM food WHERE athlete_id = ? AND 
+                            date = ? AND meal_type = ?
+                            """, (athlete_id, date, meal_type,))
+        
+        return self.cursor.fetchall()
+
     def close(self):
         self.conn.close()
 

@@ -8,6 +8,7 @@ from src.ui.authentitication import Signin, Signup
 from src.ui.toplevelwindow import TopLevelWindow
 from src.data.database_manager import database
 from src.utils.session_manager import session_manager
+from src.scheduler import start_scheduler, initialize_daily_records
 from src.utils.constant import BLUE_GRAY, TITLE_BAR_COLOR, BLUE_GRAY_TEST
 
 
@@ -72,5 +73,7 @@ class App(ctk.CTk):
 
 
 if __name__ == '__main__':
+     initialize_daily_records()
+     start_scheduler()
      app = App()
      app.mainloop()

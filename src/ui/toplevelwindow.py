@@ -27,12 +27,15 @@ class TopLevelWindow(ctk.CTkToplevel):
         self.columnconfigure(0,weight=1)
         self.columnconfigure(1,weight=30)
         self.rowconfigure(0,weight=1)
-
-
         # widgets
-        self.menu = Menu(self)
         self.home = Home(self)
+
+        self.menu = Menu(self)
         
+        self.log = Log(self)
+
+      
+
         self.frames = {}
         for frame in (Home, Log, Profile):
             f = frame(self)
@@ -42,16 +45,19 @@ class TopLevelWindow(ctk.CTkToplevel):
 
         self.change_title_bar_color()
 
-    def refresh_all_frames(self):
-         for frame in self.frames.values():
+    def refresh_all_frames(self, selected_date = None): 
+        if selected_date is None:
+             selected_date = self.get_selected_date()
+        for frame in self.frames.values():
               if hasattr(frame, 'refresh_user'):
-                   frame.refresh_user()
+                   frame.refresh_user(selected_date)
 
     def switch(self, frame):
         self.refresh_all_frames()
         self.frames[frame].tkraise()
 
-
+    def get_selected_date(self):
+         return self.home.date_selector.get_date()
 
 
     def change_title_bar_color(self):
@@ -123,8 +129,11 @@ class Menu(ctk.CTkFrame):
         self.master.home.refresh_user()
         self.master.switch(Home)
 
+
     def log(self):
+        self.master.log.refresh_user()
         self.master.switch(Log)
+        
 
     def profile(self):
         self.master.switch(Profile)

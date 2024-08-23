@@ -10,6 +10,7 @@ class Profile(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color=BLUE_GRAY,corner_radius=0)
         self.master = master
+        self.current_date = self.master.home.date_selector.get_date()
         self.columnconfigure((0,1,3), weight=1)
         self.rowconfigure((0,1,2,3,4,5,6,7,8),weight=1)
         self.master = master
@@ -161,7 +162,7 @@ class Profile(ctk.CTkFrame):
 
         step_goal = int(self.step_goal.get())
         sleep_goal = int(self.sleep_goal.get())
-        calorie_goal = float(self.calorie_goal.get())
+        calorie_goal = int(self.calorie_goal.get())
         protein_goal = int(self.protein_goal.get())
         carb_goal = int(self.carb_goal.get())
         fat_goal = int(self.fat_goal.get())
@@ -186,9 +187,15 @@ class Profile(ctk.CTkFrame):
             carb_goal=carb_goal,
             fat_goal=fat_goal   
         )
-
+        
+        
         updated_user = database.get_athlete_edited(username=username,age=age)
         session_manager.update_current_user(updated_user)
+
+        current_record = database.get_current_food_record(athlete_id=self.current_user.id, date=self.current_date)
+        new_calorie_remaining = calorie_goal - current_record[3]
+        database.update_daily_record(athlete_id=self.current_user.id, 
+                                     date=self.current_date, calories_remaining=new_calorie_remaining)
 
         self.master.refresh_all_frames()
         
