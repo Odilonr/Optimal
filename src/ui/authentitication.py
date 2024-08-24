@@ -4,6 +4,7 @@ from tkinter import StringVar
 from ..data.database_manager import database
 from ..utils.constant import BLUE_GRAY
 from CTkMessagebox  import CTkMessagebox
+from datetime import date
 
 
 class Signin(ctk.CTkFrame):
@@ -165,16 +166,22 @@ class Signup(ctk.CTkFrame):
         self.grid_forget()
 
     def signup(self):
+        if (self.username_entry.get() == '' or self.password_entry.get() == '' or self.age_entry.get() == '' or self.weight_entry.get() == ''
+            or self.height_entry_feet.get() == '' or self.height_entry_inches.get() == ''):
+            CTkMessagebox(self, title='Error',
+                            message='Please fill all fields',icon ='cancel',text_color='white')
+            return
+        
         username = self.username_entry.get().lower()
         password = self.password_entry.get()
         age = int(self.age_entry.get())
         feet = int(self.height_entry_feet.get())
         inches = int(self.height_entry_inches.get())
         height = self.height_transformation(feet,inches)
-        weight = int(self.weight_entry.get())
+        weight = float(self.weight_entry.get())
         gender = self.gender_var.get()
         activity = self.activity_entry.get()
-        phase= self.phase_entry.get()
+        phase = self.phase_entry.get()
 
         athlete = database.get_athlete(username=username,password=password)
 
@@ -182,17 +189,14 @@ class Signup(ctk.CTkFrame):
             CTkMessagebox(self, title='Error',
                             message='User already exists',icon ='cancel',text_color='white')
             
-        elif (username == '' or password == '' or age == '' or height == '' or weight == '' or gender == ''):
-            CTkMessagebox(self, title='Error',
-                            message='Please fill all fields',icon ='cancel',text_color='white')
-            
         else:
-            database.add_athlete(username=username, password=password, age=age, height=height, 
-                                 weight=weight,gender=gender, activity=activity, phase=phase)
+            database.add_athlete(username=username, password=password, age=age, height=height,gender=gender)
             
-            athlete_id = database.get_athlete_id(username=username)
+            athlete_id = database.get_athlete_id(username=username, password=password)
 
-            database.empty_daily_record(athlete_id)
+            today = date.today()
+
+            database.empty_daily_record(athlete_id, date=today, weight=weight, activity=activity, phase=phase)
             
             self.back_to_sign_in()
 

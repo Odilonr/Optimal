@@ -11,36 +11,39 @@ class DayNumbers(ctk.CTkFrame):
         super().__init__(master, fg_color=BLUE_GRAY, width=300, height=200)
         self.master = master
         self.current_user = session_manager.get_current_user()
+        current_date = self.master.date_selector.get_date()
+        current_daily_record = self.current_user.current_daily_record(current_date)
         self.grid(row = 2, column =0 ,rowspan =4,sticky='nswe',padx = 10, pady = 10)
         self.columnconfigure((0,1,2), weight=1)
         self.columnconfigure(3, weight=1)
         self.rowconfigure(0, weight=1)
+        
 
 
-        self.current_calorie_remaing = ctk.StringVar(value=f'{self.current_user.calorie_goal}')
+        self.current_calorie_remaing = ctk.StringVar(value=f'{current_daily_record[3]}')
         self.current_steps = ctk.StringVar(value='0')
         self.current_sleep = ctk.StringVar(value='0')
 
-        self.calorie_bar = CircleProgressBar(self, width=190, height = 190, fg_color='green', label='Calories remaining',
+        self.calorie_bar = CircleProgressBar(self, width=190, height = 190, fg_color='#50c878', label='Calories remaining',
                                              progress=0)
         self.calorie_bar.grid(row = 0, column = 0)
         self.calorie_bar.set_progress(0, self.current_calorie_remaing)
         
-        self.step_bar = CircleProgressBar(self, width=190, height = 190, fg_color='green', label='Steps',
+        self.step_bar = CircleProgressBar(self, width=190, height = 190, fg_color='#50c878', label='Steps',
                                           progress=0)
         self.step_bar.grid(row = 0, column = 1)
         self.step_bar.set_progress(0, self.current_steps)
 
-        self.sleep_bar = CircleProgressBar(self, width=190, height = 190,fg_color='green', label='Sleep',
+        self.sleep_bar = CircleProgressBar(self, width=190, height = 190,fg_color='#50c878', label='Sleep',
                                            progress=0)
         self.sleep_bar.grid(row = 0, column = 2)
         self.sleep_bar.set_progress(0, self.current_sleep)
 
 
 
-        self.current_carb_goal = ctk.StringVar(value=f'{self.current_user.carb_goal}')
-        self.current_protein_goal = ctk.StringVar(value=f"{self.current_user.protein_goal}")
-        self.current_fat_goal = ctk.StringVar(value=f'{self.current_user.fat_goal}')
+        self.current_carb_goal = ctk.StringVar(value=f'{current_daily_record[11]}')
+        self.current_protein_goal = ctk.StringVar(value=f"{current_daily_record[13]}")
+        self.current_fat_goal = ctk.StringVar(value=f'{current_daily_record[15]}')
 
 
 
@@ -75,12 +78,12 @@ class DayNumbers(ctk.CTkFrame):
 
     def progress_update(self, selected_date,carb_goal, protein_goal, fat_goal):  
         self.current_user = session_manager.get_current_user()
-        current_numbers = self.current_user.athletes_daily_record(selected_date)
+        current_daily_record = self.current_user.current_daily_record(selected_date)
 
-        if current_numbers:
-            value_carbs = current_numbers['carbs'] / carb_goal
-            value_protein = current_numbers['protein'] / protein_goal
-            value_fat = current_numbers['fat'] / fat_goal
+        if current_daily_record:
+            value_carbs = current_daily_record[10]/ carb_goal
+            value_protein = current_daily_record[12] / protein_goal
+            value_fat = current_daily_record[14] / fat_goal
             self.carbs_progress.set(value=value_carbs)
             self.protein_progress.set(value=value_protein)
             self.fat_progress.set(value=value_fat)
@@ -92,31 +95,43 @@ class DayNumbers(ctk.CTkFrame):
 
     def refresh_user(self, selected_date):
         self.current_user = session_manager.get_current_user()
-        current_goal_numbers = self.current_user.get_current_athlete_data()
-        self.current_carb_goal.set(f'{current_goal_numbers[12]}')
-        self.current_protein_goal.set(f'{current_goal_numbers[13]}')
-        self.current_fat_goal.set(f'{current_goal_numbers[14]}')
-        self.progress_update(selected_date=selected_date, carb_goal=current_goal_numbers[12],
-                             protein_goal=current_goal_numbers[13], fat_goal=current_goal_numbers[14])
-        self.update_steps_sleep_cals(selected_date=selected_date, cal_goal = current_goal_numbers[15],
-                                     step_goal=current_goal_numbers[10], sleep_goal=current_goal_numbers[11])
+        current_goal_numbers = self.current_user.current_daily_record(selected_date)
+        if current_goal_numbers:
+            self.current_carb_goal.set(f'{current_goal_numbers[11]}')
+            self.current_protein_goal.set(f'{current_goal_numbers[13]}')
+            self.current_fat_goal.set(f'{current_goal_numbers[15]}')
+            self.progress_update(selected_date=selected_date, carb_goal=current_goal_numbers[11],
+                                protein_goal=current_goal_numbers[13], fat_goal=current_goal_numbers[15])
+            
+            self.update_steps_sleep_cals(selected_date=selected_date, cal_goal = current_goal_numbers[3],
+                                        step_goal=current_goal_numbers[7], sleep_goal=current_goal_numbers[9])
+        else:
+            self.current_carb_goal.set(f'None')
+            self.current_protein_goal.set(f'None')
+            self.current_fat_goal.set(f'None')
+            self.calorie_bar.set_progress(0, f'None')
+            self.step_bar.set_progress(0, f'0')
+            self.sleep_bar.set_progress(0, f'0')
+            self.carbs_progress.set(value=0)
+            self.protein_progress.set(value=0)
+            self.fat_progress.set(value=0)
 
 
     def update_steps_sleep_cals(self, selected_date,cal_goal, step_goal, sleep_goal):
         self.current_user = session_manager.get_current_user()
-        current_numbers = self.current_user.athletes_daily_record(selected_date)
+        current_daily_record = self.current_user.current_daily_record(selected_date)
 
-        if current_numbers:
+        if current_daily_record:
 
-            calories_consumed = current_numbers['calories']
+            calories_consumed = current_daily_record[4]
             cals_percentage = (calories_consumed /cal_goal) * 100
-            self.calorie_bar.set_progress(cals_percentage, f'{current_numbers['remaining']}')
+            self.calorie_bar.set_progress(cals_percentage, f'{current_daily_record[5]}')
 
-            steps_percentage = (current_numbers['steps'] / step_goal) * 100
-            self.step_bar.set_progress(steps_percentage, f'{current_numbers['steps']}')
+            steps_percentage = (current_daily_record[6] / step_goal) * 100
+            self.step_bar.set_progress(steps_percentage, f'{current_daily_record[6]}')
 
-            sleep_percentage = (current_numbers['sleep'] / sleep_goal) * 100
-            self.sleep_bar.set_progress(sleep_percentage, f'{current_numbers['sleep']}')
+            sleep_percentage = (current_daily_record[8] / sleep_goal) * 100
+            self.sleep_bar.set_progress(sleep_percentage, f'{current_daily_record[8]}')
         
         else:
             self.calorie_bar.set_progress(0, f'{cal_goal}')
@@ -131,6 +146,7 @@ class CurrentWeightAHeight(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color=BLUE_GRAY, width=100, height=100)
         self.current_user = session_manager.get_current_user()
+        self.current_date = self.master.date_selector.get_date()
         self.grid(row=6, column =0, sticky='we',padx = 10, pady = 10)
         self.rowconfigure(0, weight=1)
         self.columnconfigure((0,1,2,3,4,5,6), weight=5)
@@ -139,12 +155,13 @@ class CurrentWeightAHeight(ctk.CTkFrame):
         self.place_widgets()
 
     def create_widgets(self):
-        current_stats = self.current_user.get_current_athlete_data()
-        current_height = self.current_user.inches_to_ftinch(current_stats[4])
+        current_age_height = self.current_user.current_athlete_record()
+        current_height = self.current_user.inches_to_ftinch(current_age_height[4])
+        weight = self.current_user.current_daily_record(self.current_date)[16]
         formated_height = f"{current_height["feet"]}\'{current_height["inches"]}\'\'"
-        self.age = ctk.CTkLabel(self, text=f'Age: {current_stats[3]}', font=('Microsoft Yahei UI Light', 20, 'bold'), text_color='white')
+        self.age = ctk.CTkLabel(self, text=f'Age: {current_age_height[3]}', font=('Microsoft Yahei UI Light', 20, 'bold'), text_color='white')
         self.height = ctk.CTkLabel(self, text= f'Height: {formated_height}', font=('Microsoft Yahei UI Light', 20, 'bold'), text_color='white')
-        self.weight = ctk.CTkLabel(self, text= f'Weight: {current_stats[5]}', font=('Microsoft Yahei UI Light', 20, 'bold'), text_color='white')
+        self.weight = ctk.CTkLabel(self, text= f'Weight: {weight}', font=('Microsoft Yahei UI Light', 20, 'bold'), text_color='white')
 
 
     def place_widgets(self):
@@ -154,12 +171,13 @@ class CurrentWeightAHeight(ctk.CTkFrame):
 
     def refresh_user(self):
         self.current_user = session_manager.get_current_user()
-        current_stats = self.current_user.get_current_athlete_data()
-        current_height = self.current_user.inches_to_ftinch(current_stats[4])
+        current_age_height = self.current_user.current_athlete_record()
+        current_height = self.current_user.inches_to_ftinch(current_age_height[4])
+        weight = self.current_user.current_daily_record(self.current_date)[16]
         formated_height = f"{current_height["feet"]}\'{current_height["inches"]}\'\'"
-        self.age.configure(text=f'Age: {current_stats[3]}')
+        self.age.configure(text=f'Age: {current_age_height[3]}')
         self.height.configure(text=f'Height: {formated_height}')
-        self.weight.configure(text=f'Weight: {current_stats[5]}')
+        self.weight.configure(text=f'Weight: {weight}')
 
 
 

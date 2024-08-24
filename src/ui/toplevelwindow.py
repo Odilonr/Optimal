@@ -15,49 +15,90 @@ class TopLevelWindow(ctk.CTkToplevel):
     def __init__(self, master):
         super().__init__(master, fg_color=BLUE_GRAY)
         self.title = 'Main'
+
         try:
                self.iconbitmap('the_icon.ico')
         except:
             pass
+    
         
-        self.geometry('925x500+300+200')
-        self.resizable(False,False)
-        self.grab_set()
+        self.desired_width = 1020
+        self.desired_height = 500
+        
+        self.geometry(f'{self.desired_width}x{self.desired_height}')
+        self.resizable(False, False)
+        self.minsize(self.desired_width, self.desired_height)
+        self.maxsize(self.desired_width, self.desired_height)
+        
+        if self.winfo_toplevel().wm_overrideredirect():
+            self.overrideredirect(True)
+        
+        self.update_idletasks()
+        
+        # Center the window
+        self.center_window()
+        
+        # Bind focus events
+        self.bind("<FocusIn>", self.on_focus)
+        self.bind("<FocusOut>", self.on_focus)
+        
+        # Start size check
+        self.check_size()
 
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        
+        
         self.columnconfigure(0,weight=1)
         self.columnconfigure(1,weight=30)
         self.rowconfigure(0,weight=1)
+        # Rest of your initialization code...
+
         # widgets
         self.home = Home(self)
-
         self.menu = Menu(self)
-        
         self.log = Log(self)
+        self.profile = Profile(self)
 
       
 
-        self.frames = {}
-        for frame in (Home, Log, Profile):
-            f = frame(self)
-            f.show()
-            self.frames[frame] = f
+        self.frames = {
+                        Home: self.home,
+                        Log: self.log,
+                        Profile: self.profile
+                        }
+        
+        self.current_frame = Home
+        
         self.switch(Home)
 
         self.change_title_bar_color()
 
+    def on_closing(self):
+        """Handle the window close event."""
+        self.logout()
+
+    def logout(self):
+        """Perform logout actions."""
+        session_manager.logout()
+        self.destroy()  # Close the TopLevelWindow
+        self.master.deiconify()
+
+
     def refresh_all_frames(self, selected_date = None): 
         if selected_date is None:
-             selected_date = self.get_selected_date()
+             selected_date = self.home.date_selector.get_date()
         for frame in self.frames.values():
               if hasattr(frame, 'refresh_user'):
                    frame.refresh_user(selected_date)
 
-    def switch(self, frame):
-        self.refresh_all_frames()
-        self.frames[frame].tkraise()
 
-    def get_selected_date(self):
-         return self.home.date_selector.get_date()
+    def switch(self, frame_class):
+        self.current_frame = frame_class
+        for frame in self.frames.values():
+             frame.hide()
+        self.frames[frame_class].show()
+        self.refresh_all_frames()
+
 
 
     def change_title_bar_color(self):
@@ -68,7 +109,25 @@ class TopLevelWindow(ctk.CTkToplevel):
             windll.dwmapi.DwmSetWindowAttribute(HWND, DWMWA_ATTRIBUTE, byref(c_int(COLOR)), sizeof(c_int))
       except:
             pass
+      
+    def center_window(self):
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width - self.desired_width) // 2
+        y = (screen_height - self.desired_height) // 2
+        self.geometry(f'{self.desired_width}x{self.desired_height}+{x}+{y}')
 
+    def on_focus(self, event):
+        self.center_window()
+        self.update_idletasks()
+
+    def check_size(self):
+        current_width = self.winfo_width()
+        current_height = self.winfo_height()
+        if current_width != self.desired_width or current_height != self.desired_height:
+            self.center_window()
+        self.after(100, self.check_size)
+      
 
 class Menu(ctk.CTkFrame):
     def __init__(self, master):
@@ -121,9 +180,7 @@ class Menu(ctk.CTkFrame):
         self.logout_button.grid(row =9, column = 0,  sticky = 'nswe')
 
     def logout(self):
-        session_manager.logout()
-        self.master.destroy()
-        self.master.master.deiconify()
+        self.master.logout()
 
     def home(self):
         self.master.home.refresh_user()

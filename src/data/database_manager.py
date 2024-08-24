@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import date
 from ..models.gymGoer import Gymbro
+from .helper_functions import determine_activity, macros_goal, maintenace_calories
 
 
 class Databasemanager:
@@ -16,17 +17,7 @@ class Databasemanager:
                                 password TEXT,
                                 age INTEGER,
                                 height INTEGER,
-                                weight FLOAT,
-                                gender TEXT,
-                                activity TEXT,
-                                phase TEXT,
-                                calorie_difference INTEGER,
-                                step_goal INTEGER,
-                                sleep_goal INTEGER,
-                                carb_goal INTEGER,
-                                protein_goal INTEGER,
-                                fat_goal INTEGER, 
-                                calorie_goal INTEGER
+                                gender TEXT
                             )""")
         
         
@@ -34,14 +25,22 @@ class Databasemanager:
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 athlete_id INTEGER,
                                 date DATE,
+                                calorie_goal INTEGER,
                                 calories_consumed INTEGER,
                                 calories_remaining INTEGER,
                                 steps INTEGER,
-                                carbs_consumed FLOAT,
-                                protein_consumed FLOAT,
-                                fat_consumed FLOAT,
-                                weight FLOAT,
+                                step_goal INTEGER,
                                 sleep INT,
+                                sleep_goal INTEGER,
+                                carbs_consumed FLOAT,
+                                carb_goal INTEGER,
+                                protein_consumed FLOAT,
+                                protein_goal INTEGER,
+                                fat_consumed FLOAT,
+                                fat_goal INTEGER,
+                                weight FLOAT,
+                                activity TEXT,
+                                phase TEXT,
                                 FOREIGN KEY (athlete_id) REFERENCES athletes (id)
                                 )
                                 """
@@ -66,63 +65,16 @@ class Databasemanager:
 
         self.conn.commit()
 
-    def determine_activity(self, activity):
-        activity_levels = {
-            'Sedentary': 1.25,
-            'Light': 1.4,
-            'Moderate': 1.6,
-            'Active': 1.8,
-            'Very Active': 1.9
-        }
 
-        return activity_levels[activity]
-
-    def maintenace_calories(self,gender,weight, height, age, activity):
-        if  gender == 'M':
-            return ((10*weight) + (6.25*height) - (5*age) + 5) * activity
-        else:
-            return ((10*weight) + (6.25*height) - (5*age) - 161) * activity
-        
-    def macros_goal(self, calorie_goal, phase):
-        if phase == 'Cut':
-            carbs = int((0.30 * calorie_goal)/4)
-            protein = int((0.40 * calorie_goal)/4)
-            fat = int((0.30 * calorie_goal)/8)
-        if phase == 'Bulk':
-            carbs = int((0.60 * calorie_goal)/4)
-            protein = int((0.25 * calorie_goal)/4)
-            fat = int((0.15 * calorie_goal)/8)
-
-        return { 'carb_goal':carbs,
-                'protein_goal':protein,
-                'fat_goal':fat
-                }
-
-    def add_athlete(self,username, password, age, height, weight, gender, activity, phase, calorie_difference=500,
-                    step_goal= 10000, sleep_goal = 8):
-        activity_multiplier = self.determine_activity(activity=activity)
-        maintenance = self.maintenace_calories(gender=gender, age=age, height=height, weight=weight, activity=activity_multiplier)
-
-        if phase == 'Cut':
-            calorie_goal = maintenance - calorie_difference
-        else:
-            calorie_goal = maintenance + calorie_difference
-            
-        athlete_macros = self.macros_goal(calorie_goal=calorie_goal, phase=phase)
-        carb_goal = athlete_macros['carb_goal']
-        protein_goal = athlete_macros['protein_goal']
-        fat_goal = athlete_macros['fat_goal']
-
+    def add_athlete(self,username, password, age, height, gender):
         self.cursor.execute("""
-            INSERT INTO athletes (username, password, age, height, weight,gender, activity, phase, calorie_difference,
-                            step_goal,sleep_goal,carb_goal,protein_goal,fat_goal, calorie_goal) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-        """, (username, password, age, height, weight,gender, activity, 
-              phase, calorie_difference, step_goal, sleep_goal, carb_goal, protein_goal, fat_goal, calorie_goal))
+            INSERT INTO athletes (username, password, age, height ,gender) 
+            VALUES (?,?,?,?,?)
+        """, (username, password, age, height,gender,))
         self.conn.commit()
 
-    def get_athlete_id(self, username):
-        self.cursor.execute("SELECT id FROM athletes WHERE username = ?", (username,))
+    def get_athlete_id(self, username, password):
+        self.cursor.execute("SELECT id FROM athletes WHERE username = ? AND password = ?", (username,password,))
         result = self.cursor.fetchone()
         if result:
             return result[0]
@@ -136,51 +88,12 @@ class Databasemanager:
              
              return Gymbro(
                 id=user_data[0],
-                username=user_data[1],  
-                age=user_data[3],
-                height=user_data[4],
-                weight=user_data[5],
-                gender=user_data[6],
-                activity=user_data[7],
-                phase=user_data[8],
-                db_manager=self, 
-                calorie_difference=user_data[9],
-                step_goal=user_data[10],
-                sleep_goal=user_data[11],
-                carb_goal = user_data[12],
-                protein_goal = user_data[13],
-                fat_goal = user_data[14],
-                calorie_goal = user_data[15]
+                username=user_data[1],
+                db_manager=self  
             )
         
         return None
     
-    def get_athlete_edited(self, username, age):
-        self.cursor.execute("SELECT * FROM athletes WHERE username = ? AND age = ?", (username,age,))
-        user_data = self.cursor.fetchone()
-
-        if user_data:
-             
-             return Gymbro(
-                id=user_data[0],
-                username=user_data[1],  
-                age=user_data[3],
-                height=user_data[4],
-                weight=user_data[5],
-                gender=user_data[6],
-                activity=user_data[7],
-                phase=user_data[8],
-                db_manager=self, 
-                calorie_difference=user_data[9],
-                step_goal=user_data[10],
-                sleep_goal=user_data[11],
-                carb_goal = user_data[12],
-                protein_goal = user_data[13],
-                fat_goal = user_data[14],
-                calorie_goal = user_data[15]
-            )
-        
-        return None
     
     def update_athlete(self, athlete_id, **kwargs):
         for feild in kwargs:
@@ -197,14 +110,28 @@ class Databasemanager:
         self.cursor.execute("SELECT id from athletes")
         return [row[0] for row in self.cursor.fetchall()]
 
-    def empty_daily_record(self, athlete_id, date):
-        weight_and_remaining = self.get_athlete_data(athlete_id=athlete_id)
-        weight = weight_and_remaining[5]
-        calories_remaining = weight_and_remaining[15]
-        self.cursor.execute("""INSERT INTO daily_records (athlete_id, date, calories_consumed, calories_remaining,
-                            steps, carbs_consumed, protein_consumed, fat_consumed, weight, sleep)
-                                VALUES (?,?,?,?,?,?,?,?,?,?) """,(athlete_id,date,0,calories_remaining,0,0,0,0,
-                                               weight,0,))
+    def empty_daily_record(self, athlete_id,date, weight, activity, phase):
+        athlete_data = self.get_athlete_data(athlete_id)
+        age = athlete_data[3]
+        height = athlete_data[4]
+        gender = athlete_data[5] 
+        activity_multiplier = determine_activity(activity=activity)
+        maintenance = maintenace_calories(gender=gender, weight=weight, height=height, 
+                                          age=age, activity=activity_multiplier)
+
+        if phase == 'Cut':
+            calorie_goal = int(maintenance) - 500
+        else:
+            calorie_goal = int(maintenance) + 500
+
+        macros_suggestion = macros_goal(calorie_goal=calorie_goal, phase=phase)
+
+        self.cursor.execute("""INSERT INTO daily_records (athlete_id, date, calorie_goal ,calories_consumed,
+                                calories_remaining, steps, step_goal, sleep, sleep_goal, carbs_consumed, carb_goal ,
+                                protein_consumed ,protein_goal, fat_consumed, fat_goal, weight ,activity, phase)
+                                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) """,(athlete_id,date,calorie_goal,0,calorie_goal,0,10000,0,8,0,
+                                          macros_suggestion['carb_goal'],0,macros_suggestion['protein_goal'],
+                                          0,macros_suggestion['fat_goal'],weight, activity, phase,))
         self.conn.commit()
 
     def update_daily_record(self, athlete_id, date, **kwargs):
@@ -214,18 +141,10 @@ class Databasemanager:
             
         self.conn.commit()
 
-    def get_current_food_record(self, athlete_id, date):
-        self.cursor.execute("""SELECT carbs_consumed,protein_consumed, fat_consumed,
-                             calories_consumed, calories_remaining 
-                            FROM daily_records WHERE athlete_id = ? AND date = ? """,
+    def get_current_daily_record(self, athlete_id, date):
+        self.cursor.execute("""SELECT * FROM daily_records WHERE athlete_id = ? AND date = ? """,
                             (athlete_id, date,))
-        result = self.cursor.fetchone()
-        return result
-    
-    def get_current_step_sleep_record(self, athlete_id, date):
-        self.cursor.execute("""SELECT steps, sleep 
-                            FROM daily_records WHERE athlete_id = ? AND date = ? """,
-                            (athlete_id, date,))
+        
         result = self.cursor.fetchone()
         return result
     

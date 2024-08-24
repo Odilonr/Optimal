@@ -9,7 +9,7 @@ from src.ui.toplevelwindow import TopLevelWindow
 from src.data.database_manager import database
 from src.utils.session_manager import session_manager
 from src.scheduler import start_scheduler, initialize_daily_records
-from src.utils.constant import BLUE_GRAY, TITLE_BAR_COLOR, BLUE_GRAY_TEST
+from src.utils.constant import BLUE_GRAY, TITLE_BAR_COLOR
 
 
 
@@ -23,8 +23,32 @@ class App(ctk.CTk):
                self.iconbitmap('the_icon.ico')
           except:
                pass
-          self.geometry('925x500+300+200')
-          self.resizable(False,False)
+          
+          
+          self.desired_width = 925
+          self.desired_height = 500
+          
+          self.geometry(f'{self.desired_width}x{self.desired_height}')
+          self.resizable(False, False)
+          self.minsize(self.desired_width, self.desired_height)
+          self.maxsize(self.desired_width, self.desired_height)
+          
+          if self.winfo_toplevel().wm_overrideredirect():
+               self.overrideredirect(True)
+          
+          self.update_idletasks()
+          
+          # Center the window
+          self.center_window()
+          
+          # Bind focus events
+          self.bind("<FocusIn>", self.on_focus)
+          self.bind("<FocusOut>", self.on_focus)
+          
+          # Start size check
+          self.check_size()
+          
+
           self.change_title_bar_color()
 
           self.signin_frame = Signin(master=self)
@@ -35,15 +59,25 @@ class App(ctk.CTk):
           #configurations           
           self.toplevel_window = None
 
-    
-     def open_toplevel(self):
-         if self.toplevel_window is None or not self.toplevel_window.winfo_exists():
-              self.toplevel_window = TopLevelWindow(master=self)
-              self.grab_set()
-              self.withdraw()
-         else:
-              self.toplevel_window.focus()
 
+     def center_window(self):
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width - self.desired_width) // 2
+        y = (screen_height - self.desired_height) // 2
+        self.geometry(f'{self.desired_width}x{self.desired_height}+{x}+{y}')
+
+     def on_focus(self, event):
+          self.center_window()
+          self.update_idletasks()
+
+     def check_size(self):
+          current_width = self.winfo_width()
+          current_height = self.winfo_height()
+          if current_width != self.desired_width or current_height != self.desired_height:
+               self.center_window()
+          self.after(100, self.check_size) 
+          
      def signin_approval(self):
         user_name = self.signin_frame.user_name.get().lower()
         password = self.signin_frame.password.get()
@@ -53,6 +87,7 @@ class App(ctk.CTk):
         gymbro = database.get_athlete(username=user_name, password=password)
 
         if gymbro:
+           database.open(db_name='health_tracker.db')
            session_manager.login(gymbro)
            self.open_toplevel()
         elif user_name == '' or password == '':
@@ -62,14 +97,25 @@ class App(ctk.CTk):
             CTkMessagebox(self, title='Error',
                             message='Wrong credentials',icon ='cancel',text_color='white')
         
+
      def change_title_bar_color(self):
-      try:
-            HWND = windll.user32.GetParent(self.winfo_id())
-            DWMWA_ATTRIBUTE = 35
-            COLOR =  TITLE_BAR_COLOR  
-            windll.dwmapi.DwmSetWindowAttribute(HWND, DWMWA_ATTRIBUTE, byref(c_int(COLOR)), sizeof(c_int))
-      except:
-            pass
+          try:
+               HWND = windll.user32.GetParent(self.winfo_id())
+               DWMWA_ATTRIBUTE = 35
+               COLOR =  TITLE_BAR_COLOR  
+               windll.dwmapi.DwmSetWindowAttribute(HWND, DWMWA_ATTRIBUTE, byref(c_int(COLOR)), sizeof(c_int))
+          except:
+               pass
+
+     
+
+     def open_toplevel(self):
+         if self.toplevel_window is None or not self.toplevel_window.winfo_exists():
+              self.toplevel_window = TopLevelWindow(master=self)
+              self.grab_set()
+              self.withdraw()
+         else:
+              self.toplevel_window.focus()
 
 
 if __name__ == '__main__':

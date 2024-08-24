@@ -33,10 +33,15 @@ class Log(ctk.CTkFrame):
         self.sleep_step.grid(row=3, column=0, sticky='nsew', padx=10, pady=10)
 
     def add_command(self, type):
-        if self.top_level_window is None or not self.top_level_window.winfo_exists():
-            self.top_level_window = MealEntryTopLevel(master=self, type=type)
+        selected_date = self.master.home.date_selector.get_date()
+        daily_record = self.current_user.current_daily_record(selected_date) 
+        if daily_record:
+            if self.top_level_window is None or not self.top_level_window.winfo_exists():
+                self.top_level_window = MealEntryTopLevel(master=self, type=type)
+            else:
+                self.top_level_window.focus()
         else:
-            self.top_level_window.focus()
+            return
 
     def show(self):
         self.grid(row=0,column=1,sticky='wnse',columnspan=2)
@@ -46,7 +51,7 @@ class Log(ctk.CTkFrame):
 
     def refresh_user(self, selected_date = None):
         if selected_date is None:
-            selected_date = self.master.get_selected_date()
+            selected_date = self.master.home.date_selector.get_date()
 
         self.breakfast.refresh_user(date=selected_date)
         self.lunch.refresh_user(date=selected_date)
@@ -104,9 +109,7 @@ class MealFrame(ctk.CTkFrame):
                                      text_color='white')
                 label.grid(row = myfunc(), column=(i//2) % 3 + 1, sticky = 'w', pady =10)
                 self.food_labels.append(label)
-            print('Record today')
         else:
-            print('no record fot that day!')
             return
         
 
@@ -117,7 +120,7 @@ class Stepsleep(ctk.CTkFrame):
         self.master = master
         self.current_user = session_manager.get_current_user()
         self.rowconfigure((0,1), weight=1)
-        self.columnconfigure((0,1,2,3,4),weight=1, uniform='b')
+        self.columnconfigure((0,1,2,3,4,5,6),weight=1, uniform='b')
         self.columnconfigure(2, weight=1, uniform='b')
         self.output_string_step = ctk.StringVar()
         self.output_string_sleep = ctk.StringVar()
@@ -128,21 +131,29 @@ class Stepsleep(ctk.CTkFrame):
         self.step_label = ctk.CTkLabel(self, text=f'Steps', font=('Microsoft Yahei UI Light', 20, 'bold'),text_color='white')
         self.sleep_label = ctk.CTkLabel(self, text=f'Sleep', font=('Microsoft Yahei UI Light', 20, 'bold'),text_color='white')
 
-        self.minus_button_step = ctk.CTkButton(self, text='-', fg_color = BLUE_GRAY_TEST, text_color='white',font=('Microsoft Yahei UI Light', 20, 'bold'),
-                                               command=lambda: self.update_step_sleep(info=('minus','step')), state='disabled')
-        self.plus_button_step = ctk.CTkButton(self, text='+', fg_color = BLUE_GRAY_TEST, text_color='white',font=('Microsoft Yahei UI Light', 20, 'bold'),
-                                            command=lambda: self.update_step_sleep(info=('plus','step')),state='disabled')
+        self.big_minus_button_step = ctk.CTkButton(self, text='-', fg_color = BLUE_GRAY_TEST, text_color='white',font=('Microsoft Yahei UI Light', 30, 'bold'),
+                                               command=lambda: self.update_step_sleep(info=('minus','step','big')), state='disabled')
+        self.big_plus_button_step = ctk.CTkButton(self, text='+', fg_color = BLUE_GRAY_TEST, text_color='white',font=('Microsoft Yahei UI Light', 30, 'bold'),
+                                            command=lambda: self.update_step_sleep(info=('plus','step','big')),state='disabled')
         
+        self.small_plus_button_step = ctk.CTkButton(self, text='+', fg_color=BLUE_GRAY_TEST, text_color='white',
+                                                  font=('Microsoft Yahei UI Light', 16, 'bold'), command=lambda: self.update_step_sleep(info=('plus','step','small')),
+                                                  state='disabled')
+        self.small_minus_button_step = ctk.CTkButton(self, text='-', fg_color=BLUE_GRAY_TEST, text_color='white',
+                                                  font=('Microsoft Yahei UI Light', 16, 'bold'), command=lambda: self.update_step_sleep(info=('minus','step','small')),
+                                                  state='disabled')
+
         self.minus_button_sleep = ctk.CTkButton(self, text='-', fg_color = BLUE_GRAY_TEST, text_color='white',font=('Microsoft Yahei UI Light', 20, 'bold'),
                                                 command=lambda: self.update_step_sleep(info=('minus','sleep')), state='disabled')
         self.plus_button_sleep = ctk.CTkButton(self, text='+', fg_color = BLUE_GRAY_TEST, text_color='white',font=('Microsoft Yahei UI Light', 20, 'bold'),
                                                command=lambda: self.update_step_sleep(info=('plus','sleep')), state='disabled')
+        
 
         self.save_button_steps = ctk.CTkButton(self, text='Save', font=('Microsoft Yahei UI Light', 17, 'bold'), command = lambda: self.update_steps_db(info='step'))
-        self.update_button_steps = ctk.CTkButton(self, text='Update', font=('Microsoft Yahei UI Light', 17, 'bold'), command = lambda: self.update_trigger(info='step'))
+        self.update_button_steps = ctk.CTkButton(self, text='Edit', font=('Microsoft Yahei UI Light', 17, 'bold'), command = lambda: self.update_trigger(info='step'))
 
         self.save_button_sleep = ctk.CTkButton(self, text='Save', font=('Microsoft Yahei UI Light', 17, 'bold'), command = lambda: self.update_steps_db(info='sleep'))
-        self.update_button_sleep = ctk.CTkButton(self, text='Update', font=('Microsoft Yahei UI Light', 17, 'bold'), command = lambda: self.update_trigger(info='sleep'))
+        self.update_button_sleep = ctk.CTkButton(self, text='Edit', font=('Microsoft Yahei UI Light', 17, 'bold'), command = lambda: self.update_trigger(info='sleep'))
 
         self.output_label_step = ctk.CTkLabel(self, textvariable = self.output_string_step, text_color='white', font=('Microsoft Yahei UI Light', 17, 'bold'))
         self.output_label_sleep = ctk.CTkLabel(self, textvariable = self.output_string_sleep, text_color='white', font=('Microsoft Yahei UI Light', 17, 'bold'))
@@ -150,28 +161,40 @@ class Stepsleep(ctk.CTkFrame):
         self.step_label.grid(row=0, column =0, sticky='nsw', padx=10,pady=10)
         self.sleep_label.grid(row=1, column =0, sticky='nsw', padx=10,pady=10)
 
-        self.minus_button_step.grid(row=0, column = 1, sticky='nsw', padx=8, pady=8)
-        self.output_label_step.grid(row=0, column = 2)
+        self.big_minus_button_step.grid(row=0, column = 1, sticky='nsw', padx=8, pady=8)
+        self.small_minus_button_step.grid(row = 0, column = 2, sticky='nsw', padx = 8, pady = 8)
+        self.output_label_step.grid(row=0, column = 3)
+
+        self.small_plus_button_step.grid(row = 0, column = 4, sticky = 'nsw', padx = 8, pady = 8)
+        self.big_plus_button_step.grid(row=0, column = 5,sticky='nsw', padx=8, pady=8 )
 
         self.output_label_sleep.grid(row=1, column = 2)
-        self.plus_button_step.grid(row=0, column =3,sticky='nsw', padx=8, pady=8 )
-
         self.minus_button_sleep.grid(row=1, column = 1, sticky='nsw', padx=8, pady=8)
         self.plus_button_sleep.grid(row=1, column= 3,sticky='nsw', padx=8, pady=8 )
 
-        self.update_button_steps.grid(row=0, column =4, sticky='nsw',padx = 8, pady=8)
-        self.update_button_sleep.grid(row = 1, column = 4, sticky = 'nsw', padx = 8, pady = 8)
+        self.update_button_steps.grid(row=0, column =6, sticky='nsw',padx = 8, pady=8)
+        self.update_button_sleep.grid(row = 1, column = 6, sticky = 'nsw', padx = 8, pady = 8)
+
+
 
 
     def update_step_sleep(self, info = None):
         if info:
             if info[1] == 'step':
                 if info[0] == 'plus':
-                    self.starting_step.set(self.starting_step.get() + 1)
-                    self.output_string_step.set(f'{self.starting_step.get()}')
+                    if info[2] == 'small':
+                        self.starting_step.set(self.starting_step.get() + 1)
+                        self.output_string_step.set(f'{self.starting_step.get()}')
+                    else:
+                        self.starting_step.set(self.starting_step.get() + 100)
+                        self.output_string_step.set(f'{self.starting_step.get()}')
                 else:
-                    self.starting_step.set(self.starting_step.get() - 1)
-                    self.output_string_step.set(f'{self.starting_step.get()}')
+                    if info[2] == 'small':
+                        self.starting_step.set(self.starting_step.get() - 1)
+                        self.output_string_step.set(f'{self.starting_step.get()}')
+                    else:
+                        self.starting_step.set(self.starting_step.get() - 100)
+                        self.output_string_step.set(f'{self.starting_step.get()}')
             else:
                 if info[0] == 'plus':
                     self.starting_sleep.set(self.starting_sleep.get() + 1)
@@ -185,15 +208,16 @@ class Stepsleep(ctk.CTkFrame):
 
 
     def update_steps_db(self, info):
-        date = self.master.current_date
-        ##to_day = date.today().isoformat()
+        date = self.master.master.home.date_selector.get_date()
         if info == 'step':
             new_step = int(self.output_string_step.get())
             new_sleep = 0
             self.save_button_steps.grid_forget()
-            self.update_button_steps.grid(row=0, column =4, sticky='nsw',padx = 8, pady=8)
-            self.plus_button_step.configure(state='disabled')
-            self.minus_button_step.configure(state='disabled')
+            self.update_button_steps.grid(row=0, column =6, sticky='nsw',padx = 8, pady=8)
+            self.big_plus_button_step.configure(state='normal')
+            self.big_minus_button_step.configure(state='normal')
+            self.small_minus_button_step.configure(state='normal')
+            self.small_plus_button_step.configure(state='normal')
         elif info == 'sleep':
             new_sleep = int(self.output_string_sleep.get())
             new_step = 0
@@ -204,20 +228,29 @@ class Stepsleep(ctk.CTkFrame):
         else:
             return
 
-        self.current_user.update_step_sleep_record(steps = new_step, sleep = new_sleep, date = date)
+        self.current_user.update_StepSleep_record(steps = new_step, sleep = new_sleep, date = date)
+       
 
     
     def update_trigger(self, info):
-        if info == 'step':
-            self.update_button_steps.grid_forget()
-            self.save_button_steps.grid(row=0, column =4, sticky='nsw',padx = 8, pady=8)
-            self.plus_button_step.configure(state='normal')
-            self.minus_button_step.configure(state='normal')
-        elif info == 'sleep':
-            self.update_button_sleep.grid_forget()
-            self.save_button_sleep.grid(row=1, column =4, sticky='nsw',padx = 8, pady=8)
-            self.plus_button_sleep.configure(state='normal')
-            self.minus_button_sleep.configure(state='normal')
+        selected_date = self.master.master.home.date_selector.get_date()
+        current_records = self.current_user.current_daily_record(selected_date)
+
+        if current_records:
+            if info == 'step':
+                self.update_button_steps.grid_forget()
+                self.save_button_steps.grid(row=0, column =6, sticky='nsw',padx = 8, pady=8)
+                self.big_plus_button_step.configure(state='normal')
+                self.big_minus_button_step.configure(state='normal')
+                self.small_minus_button_step.configure(state='normal')
+                self.small_plus_button_step.configure(state='normal')
+            elif info == 'sleep':
+                self.update_button_sleep.grid_forget()
+                self.save_button_sleep.grid(row=1, column =4, sticky='nsw',padx = 8, pady=8)
+                self.plus_button_sleep.configure(state='normal')
+                self.minus_button_sleep.configure(state='normal')
+            else:
+                return
         else:
             return
 
@@ -251,19 +284,19 @@ class MealEntryTopLevel(ctk.CTkToplevel):
                                       font=self.font_fields, placeholder_text='amount',placeholder_text_color='#050000',
                                        corner_radius=0, text_color='black')
         self.carbs_entry = ctk.CTkEntry(self, width=100,height=50, fg_color='white', border_width=2,
-                                      font=self.font_fields, placeholder_text='Carbs',placeholder_text_color='#050000',
+                                      font=self.font_fields, placeholder_text='Carbs(g)',placeholder_text_color='#050000',
                                        corner_radius=0, text_color='black')
         self.protein_entry = ctk.CTkEntry(self, width=180,height=50, fg_color='white', border_width=2,
-                                      font=self.font_fields, placeholder_text='Protein',placeholder_text_color='#050000',
+                                      font=self.font_fields, placeholder_text='Protein(g)',placeholder_text_color='#050000',
                                        corner_radius=0, text_color='black')
         self.fat_entry = ctk.CTkEntry(self, width=180,height=50, fg_color='white', border_width=2,
-                                      font=self.font_fields, placeholder_text='Fat',placeholder_text_color='#050000',
+                                      font=self.font_fields, placeholder_text='Fat(g)',placeholder_text_color='#050000',
                                        corner_radius=0, text_color='black')
         
         self.units_options = ctk.CTkOptionMenu(self, values = ['g', 'oz', 'tbsp', 'fl oz'], width=50, height=50, fg_color='white',
                                           text_color='black', corner_radius=0, dropdown_fg_color='white', dropdown_text_color='black',
                                           button_hover_color='#e6f0ef', button_color='white')
-        
+        self.units_options.set('measure')
         self.enter_button = ctk.CTkButton(self, text='Enter',width=140, height=50,border_width=1, border_color='white',fg_color=BLUE_GRAY,
                                             text_color='white',hover_color='#0c1545', font=self.font_fields, corner_radius=0,
                                             command=self.enter_command)
@@ -279,8 +312,7 @@ class MealEntryTopLevel(ctk.CTkToplevel):
         self.enter_button.grid(row=4,column=0, padx = 60,pady=20, sticky='e')
 
     def enter_command(self):
-        date = self.master.master.get_current_date()
-        ##to_day = date.today().isoformat()
+        date = self.master.master.home.date_selector.get_date()
         try:
             carbs = int(self.carbs_entry.get())
         except Exception as e:
@@ -302,7 +334,7 @@ class MealEntryTopLevel(ctk.CTkToplevel):
                           amount=amount_entry,carbs=carbs, protein=protein, 
                           fat=fat)
         
-        self.current_user.update_food_record(carbs = carbs, protein = protein, fat = fat, date = date)
+        self.current_user.update_consumed_record(carbs = carbs, protein = protein, fat = fat, date = date)
 
         self.master.refresh_user(date)
        
