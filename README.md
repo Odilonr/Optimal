@@ -16,14 +16,14 @@ cd Optimal
 ```
 python -m venv venv
 ```
-> wsl/mac
-```
-source venv/bin/activate
-```
-> Windows
-```
-venv\Scripts\activate
-```
+    > wsl/mac
+    ```
+    source venv/bin/activate
+    ```
+    > Windows
+    ```
+    venv\Scripts\activate
+    ```
 > Install requirements
 ```
 pip install -r requirements.txt
