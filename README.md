@@ -16,6 +16,7 @@ cd Optimal
 ```
 python -m venv venv
 ```
+<<<<<<< HEAD
 > wsl/mac.linux
 ```
 source venv/bin/activate
@@ -24,6 +25,12 @@ source venv/bin/activate
 ```
 source venv/Scripts/activate
 ```
+=======
+> wsl/mac
+```
+source venv/bin/activate
+```
+>>>>>>> 55ac60c7db79a5db0421316a7c0848cfe521e1e9
 > Windows
 ```
 venv\Scripts\activate
