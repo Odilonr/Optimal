@@ -246,7 +246,8 @@ class Profile(ctk.CTkFrame):
         self.edit.grid(row=8, column=0, padx=10, sticky='e')
 
         CTkMessagebox(self, title='Success',
-                            message='Update succesfully',icon ='check',text_color='white')
+                            message='Update succesfully',icon ='check',text_color='white',
+                            fg_color = '#2d3038',bg_color='black',cancel_button_color='white', title_color='white')
         
 
     def entry_tiles(self, left_titles, right_titles):

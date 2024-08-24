@@ -187,7 +187,8 @@ class Signup(ctk.CTkFrame):
 
         if athlete:
             CTkMessagebox(self, title='Error',
-                            message='User already exists',icon ='cancel',text_color='white')
+                            message='User already exists',icon ='cancel',text_color='white',
+                            fg_color = '#2d3038',bg_color='black',cancel_button_color='white', title_color='white')
             
         else:
             database.add_athlete(username=username, password=password, age=age, height=height,gender=gender)

@@ -77,7 +77,7 @@ class App(ctk.CTk):
           if current_width != self.desired_width or current_height != self.desired_height:
                self.center_window()
           self.after(100, self.check_size) 
-          
+
      def signin_approval(self):
         user_name = self.signin_frame.user_name.get().lower()
         password = self.signin_frame.password.get()
@@ -92,10 +92,12 @@ class App(ctk.CTk):
            self.open_toplevel()
         elif user_name == '' or password == '':
             CTkMessagebox(self, title='Error',
-                            message='Please fill both',icon ='cancel',text_color='white')
+                            message='Please fill both',icon ='cancel',text_color='white',
+                            fg_color = '#2d3038',bg_color='black',cancel_button_color='white', title_color='white')
         else:
             CTkMessagebox(self, title='Error',
-                            message='Wrong credentials',icon ='cancel',text_color='white')
+                            message='Wrong credentials',icon ='cancel',text_color='white',fg_color = '#2d3038',
+                            bg_color='black',cancel_button_color='white', title_color='white')
         
 
      def change_title_bar_color(self):
