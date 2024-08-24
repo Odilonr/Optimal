@@ -7,14 +7,24 @@ This is tkinter desktop GUI designed to help me to track my gym goals on a daily
 1. Clone repository:
 ```
 git clone https://github.com/Odilonr/Optimal.git
+```
+2. Go into project directory
+```
 cd Optimal
 ```
-2. Create Virtual Environment and install require packages:
-
+3. Create Virtual Environment and install require packages:
 ```
 python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
 ```
+> wsl/mac
+```
+source venv/bin/activate
+```
+> Windows
+```
+venv\Scripts\activate
+```
+> Install requirements
 ```
 pip install -r requirements.txt
 ```
