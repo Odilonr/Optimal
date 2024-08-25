@@ -37,7 +37,17 @@ pip install -r requirements.txt
 python main.py
 ```
 
+## How it looks like
 
+![Sign in page](src/assets/images/image_one.png)
+
+![Sign up page](src/assets/images/image_five.png)
+
+![Home page](src/assets/images/image_two.png)
+
+![Log page](src/assets/images/image_three.png)
+
+![Profile page](src/assets/images/image_four.png)
 
 
 
